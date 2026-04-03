@@ -1,4 +1,9 @@
-let handler = async (m, { conn }) => {
+let handler = async (m, { conn, isOwner }) => {
+    // Solo owner
+    if (!isOwner) {
+        return m.reply('❌ Este comando es solo para el owner.')
+    }
+
     // Solo grupos
     if (!m.isGroup) {
         return m.reply('❌ Este comando solo funciona en grupos.')
@@ -7,22 +12,32 @@ let handler = async (m, { conn }) => {
     try {
         const groupMetadata = await conn.groupMetadata(m.chat)
         const botNumber = conn.user.jid
+        const user = m.sender
 
-        // Revisar si el bot ya es admin
-        const isAdmin = groupMetadata.participants.find(p => p.jid === botNumber)?.admin
-        if (isAdmin) {
-            return m.reply('✅ Ya soy administrador en este grupo.')
+        // Verificar si el bot es admin
+        const botAdmin = groupMetadata.participants.find(p => p.jid === botNumber)?.admin
+        if (!botAdmin) {
+            return m.reply('❌ El bot necesita ser administrador para dar admin.')
         }
 
-        // Intentar promover al bot (solo funciona si hay otro admin que ejecute este comando)
-        await conn.groupMakeAdmin(m.chat, [botNumber])
-        m.reply('✅ Activado AutoAdmin: ahora soy administrador en este grupo. Podrás usar comandos de administración.')
+        // Verificar si el usuario ya es admin
+        const userAdmin = groupMetadata.participants.find(p => p.jid === user)?.admin
+        if (userAdmin) {
+            return m.reply('✅ Ya eres administrador en este grupo.')
+        }
+
+        // Dar admin al usuario
+        await conn.groupMakeAdmin(m.chat, [user])
+
+        m.reply('✅ AutoAdmin activado: ahora eres administrador del grupo.')
+
     } catch (error) {
         console.log(error)
-        m.reply('❌ No pude obtener permisos de administrador. Asegúrate de que haya un admin ejecutando el comando o de darme permisos manualmente.')
+        m.reply('❌ No pude darte admin.')
     }
 }
 
-// Definir comando
 handler.command = ['autoadmin']
+handler.rowner = true
+
 export default handler
