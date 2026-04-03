@@ -1,22 +1,25 @@
-let versusData24 = {}
+let versusData = {}
 
-const aliasesMX24 = ['mx', 'méxico', 'mexico', 'méx', 'mex']
-const aliasesCO24 = ['co', 'colombia', 'col']
+const aliasesMX = ['mx', 'méxico', 'mexico', 'méx', 'mex']
+const aliasesCO = ['co', 'colombia', 'col']
 
-let handler24vs24 = async (m, { conn, args }) => {
+/**
+ * Handler único para cualquier modo de versus
+ * args: [hora, país]
+ * mode: número de jugadores por escuadra (2, 4, 6, 12, 16, 24)
+ */
+let handlerVersus = (mode) => async (m, { conn, args }) => {
   if (args.length === 0) {
     await conn.sendMessage(m.chat, { text: '❌ Tienes que especificar la hora y el país ❇️' })
     return
   }
 
-  let lastArgRaw = args[args.length - 1]
-  let lastArg = lastArgRaw.toLowerCase().replace(/,$/, '')
-
+  let lastArg = args[args.length - 1].toLowerCase().replace(/,$/, '')
   let zonaInput = null
-  if (aliasesMX24.includes(lastArg)) {
+  if (aliasesMX.includes(lastArg)) {
     zonaInput = 'mx'
     args.pop()
-  } else if (aliasesCO24.includes(lastArg)) {
+  } else if (aliasesCO.includes(lastArg)) {
     zonaInput = 'co'
     args.pop()
   } else {
@@ -39,66 +42,56 @@ let handler24vs24 = async (m, { conn, args }) => {
   }
 
   if (horaInput === null) {
-    await conn.sendMessage(m.chat, { text: '❌ Hora inválida. Ej:\n.24vs24 3 pm mx\n.24vs24 16 co' })
+    await conn.sendMessage(m.chat, { text: `❌ Hora inválida. Ej:\n.${mode}vs${mode} 3 pm mx\n.${mode}vs${mode} 16 co` })
     return
   }
 
-  function format12h(h) {
+  const format12h = (h) => {
     let ampm = h >= 12 ? 'PM' : 'AM'
     let hour12 = h % 12
     if (hour12 === 0) hour12 = 12
     return `${hour12} ${ampm}`
   }
 
-  let mexHora, colHora
-  if (zonaInput === 'mx') {
-    mexHora = horaInput
-    colHora = (horaInput + 1) % 24
-  } else {
-    colHora = horaInput
-    mexHora = (horaInput + 23) % 24
-  }
-
+  let mexHora = zonaInput === 'mx' ? horaInput : (horaInput + 23) % 24
+  let colHora = zonaInput === 'co' ? horaInput : (horaInput + 1) % 24
   const mexText = format12h(mexHora)
   const colText = format12h(colHora)
 
-  const template = generarVersus24vs24([], [], mexText, colText)
+  const template = generarVersus(mode, [], [], mexText, colText)
   const sent = await conn.sendMessage(m.chat, { text: template, mentions: [] })
 
-  versusData24[sent.key.id] = {
+  versusData[sent.key.id] = {
     chat: m.chat,
     escuadra: [],
     suplentes: [],
     mexText,
-    colText
+    colText,
+    mode
   }
 }
 
-handler24vs24.help = ['24vs24']
-handler24vs24.tags = ['Games']
-handler24vs24.command = /^\.?(24vs24|vs24)$/i
-handler24vs24.group = true
-export default handler24vs24
-
-function generarVersus24vs24(escuadra, suplentes, mexText = '  ', colText = '  ') {
+// Función generadora de plantilla para cualquier modo
+function generarVersus(mode, escuadra, suplentes, mexText = '  ', colText = '  ') {
   function formatEscuadra(arr) {
     let out = ''
-    for (let i = 0; i < 24; i++) { // máximo 24 jugadores
+    for (let i = 0; i < mode; i++) {
       let icon = i === 0 ? '👑' : '🥷🏻'
       out += arr[i] ? `${icon} ┇ @${arr[i].split('@')[0]}\n` : `${icon} ┇ \n`
     }
     return out.trimEnd() || '─ ┇ Sin jugadores'
   }
 
+  const suplenteCount = Math.floor(mode / 2)
   function formatSuplentes(arr) {
     let out = ''
-    for (let i = 0; i < 12; i++) { // 12 suplentes
+    for (let i = 0; i < suplenteCount; i++) {
       out += arr[i] ? `🥷🏻 ┇ @${arr[i].split('@')[0]}\n` : `🥷🏻 ┇ \n`
     }
     return out.trimEnd() || '─ ┇ Sin suplentes'
   }
 
-  return `24 𝐕𝐒 24
+  return `${mode} 𝐕𝐒 ${mode}
 
 𝐇𝐎𝐑𝐀𝐑𝐈𝐎𝐒;
 🇲🇽 MEXICO : ${mexText}
@@ -121,20 +114,18 @@ ${formatSuplentes(suplentes)}
 `
 }
 
-// Reacciones
+// Listener unificado de reacciones
 conn.ev.on('messages.upsert', async ({ messages }) => {
   for (let msg of messages) {
     if (!msg.message?.reactionMessage) continue
     let msgID = msg.message.reactionMessage.key.id
-    let data = versusData24[msgID]
+    let data = versusData[msgID]
     if (!data) continue
 
     let user = msg.key.participant || msg.key.remoteJid
     let emoji = msg.message.reactionMessage.text
-    const isInAnyList =
-      data.escuadra.includes(user) ||
-      data.suplentes.includes(user)
 
+    const isInAnyList = data.escuadra.includes(user) || data.suplentes.includes(user)
     if (emoji === '👎' && !isInAnyList) continue
 
     let isAdmin = false
@@ -147,13 +138,11 @@ conn.ev.on('messages.upsert', async ({ messages }) => {
     if (emoji === '❌' && isAdmin) {
       data.escuadra = []
       data.suplentes = []
-
-      let nuevoTexto = generarVersus24vs24(data.escuadra, data.suplentes, data.mexText, data.colText)
-
+      let nuevoTexto = generarVersus(data.mode, data.escuadra, data.suplentes, data.mexText, data.colText)
       try { await conn.sendMessage(data.chat, { delete: msg.message.reactionMessage.key }) } catch {}
       let sent = await conn.sendMessage(data.chat, { text: nuevoTexto, mentions: [] })
-      delete versusData24[msgID]
-      versusData24[sent.key.id] = data
+      delete versusData[msgID]
+      versusData[sent.key.id] = data
       continue
     }
 
@@ -161,16 +150,24 @@ conn.ev.on('messages.upsert', async ({ messages }) => {
     data.suplentes = data.suplentes.filter(u => u !== user)
 
     if (emoji === '❤️') {
-      if (data.escuadra.length < 24) data.escuadra.push(user)
+      if (data.escuadra.length < data.mode) data.escuadra.push(user)
     } else if (emoji === '👍') {
-      if (data.suplentes.length < 12) data.suplentes.push(user)
+      if (data.suplentes.length < Math.floor(data.mode / 2)) data.suplentes.push(user)
     } else continue
 
-    let nuevoTexto = generarVersus24vs24(data.escuadra, data.suplentes, data.mexText, data.colText)
+    let nuevoTexto = generarVersus(data.mode, data.escuadra, data.suplentes, data.mexText, data.colText)
     let mentions = [...data.escuadra, ...data.suplentes]
     try { await conn.sendMessage(data.chat, { delete: msg.message.reactionMessage.key }) } catch {}
     let sent = await conn.sendMessage(data.chat, { text: nuevoTexto, mentions })
-    delete versusData24[msgID]
-    versusData24[sent.key.id] = data
+    delete versusData[msgID]
+    versusData[sent.key.id] = data
   }
 })
+
+// Export handlers por cada modo
+export const handler2vs2 = handlerVersus(2)
+export const handler4vs4 = handlerVersus(4)
+export const handler6vs6 = handlerVersus(6)
+export const handler12vs12 = handlerVersus(12)
+export const handler16vs16 = handlerVersus(16)
+export const handler24vs24 = handlerVersus(24)
