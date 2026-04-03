@@ -1,0 +1,51 @@
+let handler = async (m, { conn, participants, groupMetadata }) => {
+  for (let user of participants) {
+
+    let nombreGrupo = groupMetadata.subject
+    let miembros = groupMetadata.participants.length
+    let reglas = groupMetadata.desc || '⚠ Este grupo aún no tiene descripción configurada.'
+
+    let imagen = 'https://dix.lat/media3/image/upload/v1775255076/42c2646647917255a534.jpg'
+
+    let texto = `
+╭━━━━━━━━━━━━━━━━━⬣
+┃ 👑 *BIENVENIDO AL GRUPO* 👑
+╰━━━━━━━━━━━━━━━━━⬣
+
+✨ Hola @${user.split('@')[0]}
+
+📌 *INFORMACIÓN DEL GRUPO*
+━━━━━━━━━━━━━━⬣
+📛 Nombre: ${nombreGrupo}
+👥 Participantes: ${miembros}
+
+📜 *REGLAS DEL GRUPO*
+━━━━━━━━━━━━━⬣
+${reglas}
+
+⚠ *IMPORTANTE*
+━━━━━━━━━━━━━⬣
+✅ Respeta a todos los integrantes
+✅ No spam ni flood
+✅ No contenido indebido
+✅ Sigue indicaciones de admins
+✅ Mantén el orden del grupo
+
+👑 Esperamos tu buen comportamiento y participación.
+🤖 Bienvenido oficialmente.
+
+╰━━━〔 GUERRA BOT 👑 〕━━━⬣
+`
+
+    await conn.sendMessage(m.chat, {
+      image: { url: imagen },
+      caption: texto,
+      mentions: [user]
+    })
+  }
+}
+
+handler.group = true
+handler.botAdmin = true
+
+export default handler
