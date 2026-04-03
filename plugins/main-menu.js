@@ -99,7 +99,7 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname }) => {
 ┃ ✦ ${_p}promote
 ╰━━━━━━━━━━━━⬣
 
-╭━━━〔 👑 OWNER 〕━━━⬣
+╭━━━〔 👑 OWNER GUERRA 〕━━━⬣
 ┃ ✦ ${_p}panel
 ┃ ✦ ${_p}restart
 ┃ ✦ ${_p}mode
