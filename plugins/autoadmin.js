@@ -1,4 +1,5 @@
 let handler = async (m, { conn }) => {
+    // Solo grupos
     if (!m.isGroup) {
         return m.reply('❌ Este comando solo funciona en grupos.')
     }
@@ -22,5 +23,6 @@ let handler = async (m, { conn }) => {
     }
 }
 
+// Definir comando
 handler.command = ['autoadmin']
 export default handler
