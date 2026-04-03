@@ -1,21 +1,33 @@
-let handler = async (m, { conn, participants }) => {
-  if (!m.isGroup) return m.reply('❌ Este comando solo funciona en grupos')
+let handler = async (m, { conn, participants, groupMetadata, text }) => {
+  if (!m.isGroup) return m.reply('❌ Solo funciona en grupos')
 
-  let teks = '📢 *Mención general del grupo*\n\n'
+  let usuarios = participants.map(v => v.id)
+  let total = participants.length
+  let groupName = groupMetadata.subject
+
+  let mensaje = text ? text : 'Atención grupo'
+
+  let teks = `┏━━━━━━━━━━━┓
+┃  🛸 𝖦𝗋𝗎𝗉𝗈: ${groupName}
+┃  👥 𝖬𝗂𝖾𝗆𝖻𝗋𝗈𝗌: ${total}
+┗━━━━━━━━━━━┛
+┌──⭓ *${mensaje}*\n`
 
   for (let user of participants) {
-    teks += `⭔ @${user.id.split('@')[0]}\n`
+    teks += `🍷 @${user.id.split('@')[0]}\n`
   }
+
+  teks += `└───────⭓
+
+𝘎𝘜𝘌𝘙𝘙𝘈 𝘉𝘖𝘛 👑`
 
   await conn.sendMessage(m.chat, {
     text: teks,
-    mentions: participants.map(v => v.id)
+    mentions: usuarios
   }, { quoted: m })
 }
 
-handler.customPrefix = /^(\.?todos)$/i
-handler.group = true;
-handler.admin = true;
-handler.command = new RegExp
+handler.command = ['todos']
+handler.tags = ['group']
 
 export default handler
