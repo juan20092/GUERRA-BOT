@@ -14,6 +14,8 @@ let handler = async (m, { conn, participants }) => {
 }
 
 handler.customPrefix = /^(\.?todos)$/i
+handler.group = true;
+handler.admin = true;
 handler.command = new RegExp
 
 export default handler
