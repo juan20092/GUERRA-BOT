@@ -51,14 +51,14 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname }) => {
     let uptime = clockString(process.uptime() * 1000)
 
     let menuText = `
-╭━━━〔 👑 GUERRA BOT 👑 〕━━━⬣
+╭━〔 👑 GUERRA BOT 👑 〕━━━⬣
 ┃ ✦ Usuario: ${name}
 ┃ ✦ Usuarios: ${totalreg}
 ┃ ✦ Versión: ${_package.version}
 ┃ ✦ Uptime: ${uptime}
 ╰━━━━━━━━━━━━⬣
 
-╭━━━〔 🎮 GAMES 〕━━━⬣
+╭━━〔 🎮 GAMES 〕━━━⬣
 ┃ ✦ ${_p}2vs2
 ┃ ✦ ${_p}4vs4
 ┃ ✦ ${_p}6vs6
@@ -76,7 +76,7 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname }) => {
 ┃ ✦ ${_p}inscribirse4
 ╰━━━━━━━━━━━━⬣
 
-╭━━━〔 📥 DESCARGAS 〕━━━⬣
+╭━━〔 📥 DESCARGAS 〕━━━⬣
 ┃ ✦ ${_p}play
 ┃ ✦ ${_p}ytmp3
 ┃ ✦ ${_p}ytmp4
@@ -84,7 +84,7 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname }) => {
 ┃ ✦ ${_p}mediafire
 ╰━━━━━━━━━━━━⬣
 
-╭━━━〔 🖼️ STICKERS 〕━━━⬣
+╭━━〔 🖼️ STICKERS 〕━━━⬣
 ┃ ✦ ${_p}sticker
 ┃ ✦ ${_p}wm
 ┃ ✦ ${_p}qc
