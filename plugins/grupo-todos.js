@@ -6,25 +6,26 @@ let handler = async (m, { conn, participants, groupMetadata, text }) => {
   let groupName = groupMetadata.subject
   let mensaje = text ? text : 'Atención grupo'
 
-  let teks = `╭━━━〔 🚀 LLAMADO GENERAL 🚀 〕━━━⬣
-┃ 🏷️ Grupo: ${groupName}
+  let teks = `╭━━━〔 ⚡ LLAMADO GLOBAL ⚡ 〕━━━⬣
+┃ 🛸 Grupo: ${groupName}
 ┃ 👥 Miembros: ${total}
-┃ 📢 Aviso: ${mensaje}
+┃ 📣 Aviso: ${mensaje}
 ╰━━━━━━━━━━━━━━━━⬣
 
-┏━━━〔 👑 INVOCADOS 👑 〕━━━⬣
+┏━━━〔 🔥 INVOCADOS 🔥 〕━━━⬣
 `
 
   for (let user of participants) {
-    teks += `┃ ✦ @${user.id.split('@')[0]}\n`
+    teks += `┃ ⚔️ @${user.id.split('@')[0]}\n`
   }
 
   teks += `┗━━━━━━━━━━━━━━━━⬣
 
-⚡ GUERRA BOT ACTIVADO ⚡`
+👑 GUERRA BOT • ACTIVADO 👑`
 
   await conn.sendMessage(m.chat, {
-    text: teks,
+    image: { url: 'https://api.dix.lat/media/img_1775195377061_9uFt_bPM2.jpg' },
+    caption: teks,
     mentions: usuarios
   }, { quoted: m })
 }
