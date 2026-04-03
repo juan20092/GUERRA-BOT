@@ -1,51 +1,176 @@
-global.salas = global.salas || {}
+let versusData = {}
 
-let handler = async (m, { conn, text }) => {
-    let id = m.chat
+const aliasesMX = ['mx', 'méxico', 'mexico', 'méx', 'mex']
+const aliasesCO = ['co', 'colombia', 'col']
 
-    // Verifica que se indique país y hora separados por "|"
-    if (!text || !text.includes('|')) {
-        return conn.sendMessage(m.chat, { 
-            text: '❌ Por favor indica el país y la hora separados por "|", ejemplo:\n/2vs2 MEXICO | 10 PM' 
-        }, { quoted: m })
+let handler = async (m, { conn, args }) => {
+  if (args.length === 0) {
+    await conn.sendMessage(m.chat, { text: '❌ Tienes que especificar la hora y el país ❇️' })
+    return
+  }
+
+  let lastArgRaw = args[args.length - 1]
+  let lastArg = lastArgRaw.toLowerCase().replace(/,$/, '')
+
+  let zonaInput = null
+  if (aliasesMX.includes(lastArg)) {
+    zonaInput = 'mx'
+    args.pop()
+  } else if (aliasesCO.includes(lastArg)) {
+    zonaInput = 'co'
+    args.pop()
+  } else {
+    await conn.sendMessage(m.chat, { text: '❌ Especifica un país válido.\nEj: 3 pm mx, 16 co' })
+    return
+  }
+
+  const timeStr = args.join(' ').toUpperCase().trim()
+  const match = timeStr.match(/^(\d{1,2})(?:\s*(AM|PM))?$/i)
+
+  let horaInput = null
+  if (match) {
+    let hour = parseInt(match[1])
+    const ampm = match[2] || null
+    if (ampm) {
+      if (ampm === 'PM' && hour < 12) hour += 12
+      if (ampm === 'AM' && hour === 12) hour = 0
     }
+    if (hour >= 0 && hour <= 23) horaInput = hour
+  }
 
-    let [pais, hora] = text.split('|').map(t => t.trim())
+  if (horaInput === null) {
+    await conn.sendMessage(m.chat, { text: '❌ Hora inválida. Ej:\n.2vs2 3 pm mx\n.2vs2 16 co' })
+    return
+  }
 
-    // Inicializa la sala 2vs2
-    global.salas[id] = {
-        jugadores: [],
-        suplentes: [],
-        pais: pais,
-        horario: hora,
-        msgId: null
-    }
+  function format12h(h) {
+    let ampm = h >= 12 ? 'PM' : 'AM'
+    let hour12 = h % 12
+    if (hour12 === 0) hour12 = 12
+    return `${hour12} ${ampm}`
+  }
 
-    // Mensaje de la sala con reacciones
-    let teks = `*2 𝐕𝐒 2*
+  let mexHora, colHora
+  if (zonaInput === 'mx') {
+    mexHora = horaInput
+    colHora = (horaInput + 1) % 24
+  } else {
+    colHora = horaInput
+    mexHora = (horaInput + 23) % 24
+  }
 
-*🌎 PAÍS:* ${pais}
-*⏰ HORA:* ${hora}
+  const mexText = format12h(mexHora)
+  const colText = format12h(colHora)
 
-*🎮 JUGADORES PRESENTES*;
+  const template = generarVersus2vs2([], [], mexText, colText)
+  const sent = await conn.sendMessage(m.chat, { text: template, mentions: [] })
 
-*🛡️ ESCUADRA ÚNICA*
-👑 ┇ 
-🥷🏻 ┇
-
-ㅤʚ *SUPLENTES*:
-🥷🏻 ┇
-
-*⚡ REACCIONES:*  
-❤️ Participar  
-👍 Suplente  
-👎 Salir  
-❌ Reiniciar`
-
-    // Enviar mensaje
-    let msg = await conn.sendMessage(m.chat, { text: teks }, { quoted: m })
-    global.salas[id].msgId = msg.key.id
+  versusData[sent.key.id] = {
+    chat: m.chat,
+    escuadra: [],
+    suplentes: [],
+    mexText,
+    colText
+  }
 }
 
-handler.command = ['2vs2']
+handler.help = ['2vs2']
+handler.tags = ['Games']
+handler.command = /^\.?(2vs2|vs2)$/i
+handler.group = true
 export default handler
+
+function generarVersus2vs2(escuadra, suplentes, mexText = '  ', colText = '  ') {
+  function formatEscuadra(arr) {
+    let out = ''
+    for (let i = 0; i < 2; i++) { // máximo 2 jugadores
+      let icon = i === 0 ? '👑' : '🥷🏻'
+      out += arr[i] ? `${icon} ┇ @${arr[i].split('@')[0]}\n` : `${icon} ┇ \n`
+    }
+    return out.trimEnd() || '─ ┇ Sin jugadores'
+  }
+
+  function formatSuplentes(arr) {
+    let out = ''
+    for (let i = 0; i < 1; i++) { // 1 suplente
+      out += arr[i] ? `🥷🏻 ┇ @${arr[i].split('@')[0]}\n` : `🥷🏻 ┇ \n`
+    }
+    return out.trimEnd() || '─ ┇ Sin suplentes'
+  }
+
+  return `2 𝐕𝐒 2
+
+𝐇𝐎𝐑𝐀𝐑𝐈𝐎𝐒;
+🇲🇽 MEXICO : ${mexText}
+🇨🇴 COLOMBIA : ${colText}
+
+𝐉𝐔𝐆𝐀𝐃𝐎𝐑𝐄𝐒 𝐏𝐑𝐄𝐒𝐄𝐍𝐓𝐄𝐒;
+
+𝗘𝗦𝗖𝗨𝗔𝗗𝗥𝐀 Ú𝗡𝐈𝗖𝐀
+${formatEscuadra(escuadra)}
+
+ㅤʚ 𝐒𝐔𝐏𝐋𝐄𝐍𝐓𝐄𝗦:
+${formatSuplentes(suplentes)}
+
+𝖲𝗈𝗅𝗈 𝗋𝖾𝖺𝖼𝖼𝗂𝗈𝗇𝖺 𝖼𝗈𝗇:
+
+> 「 ❤️ 」Participar  
+> 「 👍 」Suplente  
+> 「 👎 」Salir de la lista  
+> 「 ❌ 」Reiniciar lista
+`
+}
+
+// Reacciones
+conn.ev.on('messages.upsert', async ({ messages }) => {
+  for (let msg of messages) {
+    if (!msg.message?.reactionMessage) continue
+    let msgID = msg.message.reactionMessage.key.id
+    let data = versusData[msgID]
+    if (!data) continue
+
+    let user = msg.key.participant || msg.key.remoteJid
+    let emoji = msg.message.reactionMessage.text
+    const isInAnyList =
+      data.escuadra.includes(user) ||
+      data.suplentes.includes(user)
+
+    if (emoji === '👎' && !isInAnyList) continue
+
+    let isAdmin = false
+    try {
+      let groupMetadata = await conn.groupMetadata(data.chat)
+      let participant = groupMetadata.participants.find(p => p.id === user)
+      isAdmin = participant?.admin === 'admin' || participant?.admin === 'superadmin'
+    } catch {}
+
+    if (emoji === '❌' && isAdmin) {
+      data.escuadra = []
+      data.suplentes = []
+
+      let nuevoTexto = generarVersus2vs2(data.escuadra, data.suplentes, data.mexText, data.colText)
+
+      try { await conn.sendMessage(data.chat, { delete: msg.message.reactionMessage.key }) } catch {}
+      let sent = await conn.sendMessage(data.chat, { text: nuevoTexto, mentions: [] })
+      delete versusData[msgID]
+      versusData[sent.key.id] = data
+      continue
+    }
+
+    data.escuadra = data.escuadra.filter(u => u !== user)
+    data.suplentes = data.suplentes.filter(u => u !== user)
+
+    if (emoji === '❤️') {
+      if (data.escuadra.length < 2) data.escuadra.push(user)
+    } else if (emoji === '👍') {
+      if (data.suplentes.length < 1) data.suplentes.push(user)
+    } else continue
+
+    let nuevoTexto = generarVersus2vs2(data.escuadra, data.suplentes, data.mexText, data.colText)
+    let mentions = [...data.escuadra, ...data.suplentes]
+    try { await conn.sendMessage(data.chat, { delete: msg.message.reactionMessage.key }) } catch {}
+    let sent = await conn.sendMessage(data.chat, { text: nuevoTexto, mentions })
+    delete versusData[msgID]
+    versusData[sent.key.id] = data
+  }
+})
