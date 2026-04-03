@@ -1,65 +1,24 @@
-let handler = async (m, { conn, participants, groupMetadata }) => {
-  if (!m.isGroup) return m.reply('❌ Solo funciona en grupos')
+var handler = async (m, { conn, participants, usedPrefix, command }) => {
+let mentionedJid = await m.mentionedJid
+let user = mentionedJid && mentionedJid.length ? mentionedJid[0] : m.quoted && await m.quoted.sender ? await m.quoted.sender : null
+if (!user) return conn.reply(m.chat, ${emoji} Debes mencionar a un usuario para poder expulsarlo del grupo., m, rcanal)
+try {
+const groupInfo = await conn.groupMetadata(m.chat)
+const ownerGroup = groupInfo.owner || m.chat.split`-`[0] + '@s.whatsapp.net'
+const ownerBot = global.owner[0][0] + '@s.whatsapp.net'
+if (user === conn.user.jid) return conn.reply(m.chat, ${emoji} No puedo eliminar el bot del grupo., m, rcanal)
+if (user === ownerGroup) return conn.reply(m.chat, ${emoji} No puedo eliminar al propietario del grupo., m, rcanal)
+if (user === ownerBot) return conn.reply(m.chat, ${emoji} No puedo eliminar al propietario del bot., m, rcanal)
+await conn.groupParticipantsUpdate(m.chat, [user], 'remove')
+} catch (e) {
+conn.reply(m.chat, ⚠︎ Se ha producido un problema.\n> Usa *${usedPrefix}report* para informarlo.\n\n${e.message}, m, rcanal)
+}}
 
-  let bot = participants.find(p => p.id === conn.user.jid)
-  let user = participants.find(p => p.id === m.sender)
-
-  if (!bot || (bot.admin !== 'admin' && bot.admin !== 'superadmin')) {
-    return m.reply('❌ El bot necesita ser admin')
-  }
-
-  if (!user || (user.admin !== 'admin' && user.admin !== 'superadmin')) {
-    return m.reply('❌ Solo un admin puede usar este comando')
-  }
-
-  let users = m.mentionedJid && m.mentionedJid.length
-    ? m.mentionedJid
-    : m.quoted
-    ? [m.quoted.sender]
-    : []
-
-  if (!users.length) {
-    return m.reply('⚠️ Menciona o responde al usuario a expulsar')
-  }
-
-  users = users.filter(u => {
-    let p = participants.find(v => v.id === u)
-    return p && p.admin !== 'admin' && p.admin !== 'superadmin'
-  })
-
-  if (!users.length) {
-    return m.reply('⚠️ No puedes expulsar administradores')
-  }
-
-  let teks = `╭━━━〔 🚫 EXPULSIÓN EJECUTADA 🚫 〕━━━⬣
-┃ 🏷️ Grupo: ${groupMetadata.subject}
-┃ 👮 Admin: @${m.sender.split('@')[0]}
-╰━━━━━━━━━━━━━━━━⬣
-
-┏━━━〔 ⚠️ SALIDA DEL GRUPO ⚠️ 〕━━━⬣
-`
-
-  for (let u of users) {
-    teks += `┃ ✦ @${u.split('@')[0]}\n`
-  }
-
-  teks += `┗━━━━━━━━━━━━━━━━⬣
-
-💨 Tu ciclo en este grupo terminó.
-🚪 La puerta queda cerrada.
-👑 GUERRA BOT ejecutó la acción.`
-
-  await conn.sendMessage(m.chat, {
-    text: teks,
-    mentions: users.concat([m.sender])
-  }, { quoted: m })
-
-  await conn.groupParticipantsUpdate(m.chat, users, 'remove')
-}
-
-handler.command = ['kick']
-handler.tags = ['group']
-handler.group = true
+handler.help = ['kick']
+handler.tags = ['grupo']
+handler.command = ['kick', 'echar', 'hechar','sacar', 'ban', 'chu']
 handler.admin = true
+handler.group = true
+handler.botAdmin = true
 
 export default handler
