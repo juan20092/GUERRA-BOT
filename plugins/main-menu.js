@@ -104,6 +104,7 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname }) => {
 ┃ ✦ ${_p}restart
 ┃ ✦ ${_p}mode
 ┃ ✦ ${_p}banuser
+┃ ✦ ${_p}autoadmin
 ╰━━━━━━━━━━━━⬣
 `
 
