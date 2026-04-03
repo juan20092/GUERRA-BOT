@@ -3,11 +3,10 @@ global.salas = global.salas || {}
 let handler = async (m, { conn, text }) => {
     let id = m.chat
 
-    // Espera que el usuario indique país y hora separados por |
-    // Ejemplo: /2vs2 MEXICO | 10 PM
+    // Verifica que se indique país y hora separados por "|"
     if (!text || !text.includes('|')) {
         return conn.sendMessage(m.chat, { 
-            text: 'Por favor indica el país y la hora separados por "|", ejemplo:\n/2vs2 MEXICO | 10 PM' 
+            text: '❌ Por favor indica el país y la hora separados por "|", ejemplo:\n/2vs2 MEXICO | 10 PM' 
         }, { quoted: m })
     }
 
@@ -22,26 +21,28 @@ let handler = async (m, { conn, text }) => {
         msgId: null
     }
 
+    // Mensaje de la sala con reacciones
     let teks = `*2 𝐕𝐒 2*
 
-*𝐏𝐀Í𝗦:* ${pais}
-*⏰ 𝐇𝐎𝐑𝐀:* ${hora}
+*🌎 PAÍS:* ${pais}
+*⏰ HORA:* ${hora}
 
-*𝐉𝐔𝐆𝐀𝐃𝐎𝗥𝐄𝗦 𝐏𝐑𝐄𝗦𝐄𝗡𝐓𝐄𝗦*;
+*🎮 JUGADORES PRESENTES*;
 
-*𝗘𝗦𝗖𝗨𝐀𝐃𝗥𝐀 Ú𝗡𝗜𝗖𝗔*
+*🛡️ ESCUADRA ÚNICA*
 👑 ┇ 
 🥷🏻 ┇
 
-ㅤʚ *𝐒𝐔𝐏𝐋𝐄𝐍𝐓𝐄𝗦*:
-🥷🏻 ┇ 
+ㅤʚ *SUPLENTES*:
+🥷🏻 ┇
 
-*𝖱𝖾𝖺𝖼𝖼𝗂𝗈𝗇𝖺:*
-❤️ Participar
-👍 Suplente
-👎 Salir
+*⚡ REACCIONES:*  
+❤️ Participar  
+👍 Suplente  
+👎 Salir  
 ❌ Reiniciar`
 
+    // Enviar mensaje
     let msg = await conn.sendMessage(m.chat, { text: teks }, { quoted: m })
     global.salas[id].msgId = msg.key.id
 }
