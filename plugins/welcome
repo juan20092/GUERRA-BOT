@@ -3,7 +3,7 @@ let handler = async (m, { conn, participants, groupMetadata }) => {
 
     let nombreGrupo = groupMetadata.subject
     let miembros = groupMetadata.participants.length
-    let reglas = groupMetadata.desc || '⚠ Este grupo aún no tiene descripción configurada.'
+    let descripcion = groupMetadata.desc || '⚠ Este grupo aún no tiene descripción configurada.'
 
     let imagen = 'https://dix.lat/media3/image/upload/v1775255076/42c2646647917255a534.jpg'
 
@@ -19,9 +19,9 @@ let handler = async (m, { conn, participants, groupMetadata }) => {
 📛 Nombre: ${nombreGrupo}
 👥 Participantes: ${miembros}
 
-📜 *REGLAS DEL GRUPO*
+📝 *DESCRIPCIÓN DEL GRUPO*
 ━━━━━━━━━━━━━⬣
-${reglas}
+${descripcion}
 
 ⚠ *IMPORTANTE*
 ━━━━━━━━━━━━━⬣
