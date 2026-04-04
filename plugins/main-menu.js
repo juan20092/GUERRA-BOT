@@ -47,6 +47,7 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname }) => {
       const resolvedName = await Promise.resolve(conn.getName ? conn.getName(m.sender) : null)
       if (resolvedName) name = resolvedName
     } catch {}
+
     let totalreg = Object.keys(global.db?.data?.users || {}).length
     let uptime = clockString(process.uptime() * 1000)
 
@@ -67,7 +68,7 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname }) => {
 ┃ ✦ ${_p}24vs24
 ╰━━━━━━━━━━━━⬣
 
-╭━━━〔 🔫 BLOOD ZONE 〕━━━⬣
+╭━━〔 🔫 BLOOD ZONE 〕━━━⬣
 ┃ ✦ ${_p}rank
 ┃ ✦ ${_p}stats
 ┃ ✦ ${_p}mapas
@@ -82,6 +83,8 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname }) => {
 ┃ ✦ ${_p}ytmp4
 ┃ ✦ ${_p}tiktok
 ┃ ✦ ${_p}mediafire
+┃ ✦ ${_p}apk
+┃ ✦ ${_p}instagram
 ╰━━━━━━━━━━━━⬣
 
 ╭━━〔 🖼️ STICKERS 〕━━━⬣
@@ -89,30 +92,48 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname }) => {
 ┃ ✦ ${_p}wm
 ┃ ✦ ${_p}qc
 ┃ ✦ ${_p}toimg
+┃ ✦ ${_p}brat
 ╰━━━━━━━━━━━━⬣
 
-╭━━━〔 🛠️ GROUP CONTROL 〕━━━⬣
+╭━━〔 🛠️ GROUP CONTROL 〕━━⬣
 ┃ ✦ ${_p}open
 ┃ ✦ ${_p}close
 ┃ ✦ ${_p}kick
 ┃ ✦ ${_p}tagall
 ┃ ✦ ${_p}promote
+┃ ✦ ${_p}demote
+┃ ✦ ${_p}link
 ╰━━━━━━━━━━━━⬣
 
-╭━━━〔 👑 OWNER GUERRA 〕━━━⬣
+╭━━〔 👑 OWNER GUERRA 〕━━⬣
 ┃ ✦ ${_p}panel
 ┃ ✦ ${_p}restart
 ┃ ✦ ${_p}mode
 ┃ ✦ ${_p}banuser
 ┃ ✦ ${_p}autoadmin
+┃ ✦ ${_p}join
+┃ ✦ ${_p}update
 ╰━━━━━━━━━━━━⬣
 `
 
     let imageUrl = 'https://api.dix.lat/media/img_1775165960007_38VaI-Exa.jpg'
+    let fkontak = await makeFkontak()
+
     try {
-      await conn.sendMessage(m.chat, { image: { url: imageUrl }, caption: menuText })
+      await conn.sendMessage(
+        m.chat,
+        {
+          image: { url: imageUrl },
+          caption: menuText
+        },
+        { quoted: fkontak }
+      )
     } catch {
-      await conn.sendMessage(m.chat, { text: menuText })
+      await conn.sendMessage(
+        m.chat,
+        { text: menuText },
+        { quoted: fkontak }
+      )
     }
 
   } catch (e) {
@@ -130,5 +151,5 @@ function clockString(ms) {
   let h = Math.floor(ms / 3600000)
   let m = Math.floor(ms / 60000) % 60
   let s = Math.floor(ms / 1000) % 60
-  return [h, m, s].map(v => v.toString().padStart(2, 0)).join(':')
+  return [h, m, s].map(v => v.toString().padStart(2, '0')).join(':')
 }
